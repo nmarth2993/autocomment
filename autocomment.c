@@ -14,7 +14,7 @@ Section:        13
 E-mail:         nmarthi1@umbc.edu
 Description:    This file automagically
                 adds python header comments
-                to my CS homework.
+                to my CS homework files.
 """
 */
 
@@ -40,6 +40,7 @@ Description:    This file automagically
 #define printerr(message) printf("%serror: %s%s", COLOR_RED, COLOR_RESET, message);
 #define errclose printerr("could not close the file\n")
 #define erropen printerr("something went wrong opening the filen\n")
+#define tmpchk(len) dent->d_name[len - 3] == 't' && dent->d_name[len - 2] == 'm' && dent->d_name[len - 1] == 'p'
 
 char *appendfname(char *path, char *filename);
 FILE *maketmp(char *filename);
@@ -51,6 +52,7 @@ void readdesc(char *desc);
 
 //ex: if it can't open a file for reading
 //it just exits because that's the simplest thing
+//I kinda do some cleanup
 
 //I now notice that it doesn't clean up on exit,
 //but it's 3am so that's a nope
@@ -58,10 +60,6 @@ void readdesc(char *desc);
 int main(int argc, char **argv)
 {
     DIR *dir;
-
-    char *fullpath = calloc(MAX_PATH_LEN, sizeof(char));
-    strcpy(fullpath, DIR_NAME);
-    printf("path: %s\n", fullpath);
 
     if ((dir = opendir(DIR_NAME)) == NULL)
     {
@@ -84,31 +82,54 @@ int main(int argc, char **argv)
             continue;
         }
         namelen = strlen(dent->d_name);
-        if (dent->d_name[namelen - 2] == 't' && dent->d_name[namelen - 1] == 'm' && dent->d_name[namelen] == 'p')
+        // printf("namelen: %d\n", namelen);
+        // printf("name[max - 2]: %c\nname[max - 1]: %c\nname[max - 0]: %c\n", dent->d_name[namelen - 3], dent->d_name[namelen - 2], dent->d_name[namelen - 1]);
+        if (tmpchk(namelen))
         {
             //this is a tmp file and should be ignored
             continue;
         }
         // printf("name[0]: %c\nequals: %d\n", dent->d_name[0], dent->d_name[0] == '.');
-        printf("name: %s\n", dent->d_name);
+        // printf("name: %s\n", dent->d_name);
         char *fname = malloc(256 * sizeof(char));
         sprintf(fname, "%s%c", dent->d_name, '\0');
         // strcat(fname, "\0");
-        printf("fname: %s\n", fname);
+        // printf("fname: %s\n", fname);
         // exit(-1);
         maketmp(fname);
     }
-    //TODO: delete .tmp files left in the directory
-    // printf("hello\n");
-    // free(currentfile);
-    // free(fullpath);
-    // printf("hello again\n");
-    // if (closedir(dir))
-    // {
-    //     printerr("couldn't close directory\n");
-    // }
-    printf("test\n");
-    exit(0); // I won't tell anyone if you don't ;)
+    //we need to re-traverse the directory
+    //for .tmp files, so we just reopen the dir
+    closedir(dir);
+    if ((dir = opendir(DIR_NAME)) == NULL)
+    {
+        printerr("could not open directory to delete .tmp files\n");
+        return -1;
+    }
+
+    char *fullpath = calloc(MAX_PATH_LEN, sizeof(char));
+
+    while ((dent = readdir(dir)) != NULL)
+    {
+        namelen = strlen(dent->d_name);
+        if (tmpchk(namelen))
+        {
+            strcpy(fullpath, DIR_NAME);
+            fullpath = appendfname(fullpath, dent->d_name);
+            //delete the tmp file
+            if (remove(fullpath))
+            {
+                printerr("could not remove file ");
+                printf("%s\n", fullpath);
+            }
+        }
+    }
+
+    closedir(dir);
+    free(dent);
+    dent = NULL;
+    free(fullpath);
+    fullpath = NULL;
     return 0;
 }
 
@@ -161,8 +182,6 @@ char *appendfname(char *path, char *filename)
 //the original file from tmp
 FILE *maketmp(char *filename)
 {
-    printf("filename: %s\nlen: %ld\n", filename, strlen(filename));
-    // exit(1);
     FILE *current;
     FILE *tmp;
 
@@ -172,7 +191,7 @@ FILE *maketmp(char *filename)
     strcpy(currentfname, DIR_NAME);
     strcpy(tmpfname, DIR_NAME);
 
-    printf("filename: %s\nlen: %ld\n", filename, strlen(filename));
+    // printf("filename: %s\nlen: %ld\n", filename, strlen(filename));
     // exit(1);
     currentfname = appendfname(currentfname, filename);
     strcpy(tmpfname, currentfname);
@@ -181,14 +200,14 @@ FILE *maketmp(char *filename)
     if (!(current = fopen(currentfname, "r")))
     {
         printerr("could not read file\n");
-        exit(-1);
+        goto cleanup;
     }
     else
     {
         if (!(tmp = fopen(tmpfname, "w")))
         {
             printerr("could not create tmpfile\n");
-            exit(-1);
+            goto cleanup;
         }
         else
         {
@@ -201,9 +220,7 @@ FILE *maketmp(char *filename)
             //at this point (hopefully) the original file has been copied to the .tmp file
             if (fclose(current))
             {
-                errclose
-                    printf("(file current)\n");
-                exit(-1);
+                errclose goto cleanup;
             }
             else
             {
@@ -211,8 +228,7 @@ FILE *maketmp(char *filename)
                 //we are now writing the header
                 if (!(current = fopen(currentfname, "w")))
                 {
-                    erropen
-                        exit(-1);
+                    erropen goto cleanup;
                 }
                 else
                 {
@@ -229,7 +245,7 @@ FILE *maketmp(char *filename)
                     //format date output to *date
                     sprintf(date, "%d/%d/%d%c", time.tm_mon + 1, time.tm_mday, time.tm_year + 1900, '\0');
 
-                    printf("enter description for file %s%s%s ", COLOR_GREEN, filename, COLOR_RESET);
+                    printf("enter description for file %s%s%s: ", COLOR_GREEN, filename, COLOR_RESET);
                     char *desc = malloc(MAX_DESC * sizeof(char));
                     //note that I have to insert 4 TABS after every newline
                     readdesc(desc);
@@ -240,13 +256,13 @@ FILE *maketmp(char *filename)
 
                     if (fclose(tmp))
                     {
-                        errclose
+                        errclose goto cleanup;
                     }
                     else
                     {
                         if (!(tmp = fopen(tmpfname, "r")))
                         {
-                            erropen
+                            erropen goto cleanup;
                         }
                         else
                         {
@@ -258,17 +274,25 @@ FILE *maketmp(char *filename)
                             }
                             if (fclose(current))
                             {
-                                errclose
+                                errclose goto cleanup;
                             }
-                        //I think this is the end...
-                        //I might use this label eventually
-                        //but I might not
-                        cleanup:
-                            free(line);
-                            free(current);
-                            free(tmp);
-                            free(currentfname);
-                            free(tmpfname);
+                            else
+                            {
+                                if (fclose(tmp))
+                                {
+                                    errclose goto cleanup;
+                                }
+                                else
+                                {
+                                cleanup:
+                                    free(line);
+                                    line = NULL;
+                                    free(tmpfname);
+                                    tmpfname = NULL;
+                                    free(currentfname);
+                                    currentfname = NULL;
+                                }
+                            }
                         }
                     }
                 }
