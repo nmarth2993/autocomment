@@ -25,7 +25,7 @@ Description:    This file automagically
 #define COLOR_RESET "\x1b[0m"
 
 //file-related constants
-#define DIR_NAME "test" //NOTE: This program should be one directory \
+#define DIR_NAME "test\0" //NOTE: This program should be one directory \
                             above the one it is modifying (im lazy)
 #define MAX_PATH_LEN 512
 #define MAX_LINE 512
@@ -72,6 +72,7 @@ int main(int argc, char **argv)
     }
     struct dirent *dent;
 
+    int namelen;
     while ((dent = readdir(dir)) != NULL)
     {
         // printf("\n\nname[0]: %d, cmp: %d\n\n", dent->d_name[0], '.');
@@ -84,32 +85,22 @@ int main(int argc, char **argv)
         {
             continue;
         }
+        namelen = strlen(dent->d_name);
+        if (dent->d_name[namelen - 2] == 't' && dent->d_name[namelen - 1] == 'm' && dent->d_name[namelen] == 'p')
+        {
+            //this is a tmp file and should be ignored
+            continue;
+        }
         // printf("name[0]: %c\nequals: %d\n", dent->d_name[0], dent->d_name[0] == '.');
         printf("name: %s\n", dent->d_name);
-        maketmp(dent->d_name);
-        fullpath = appendfname(fullpath, dent->d_name);
-
-        maketmp(dent->d_name);
-
-        if (!(currentfile = fopen(fullpath, "w")))
-        {
-            printerr("")
-                printf("could not open %s%s%s for writing\n", COLOR_GREEN, dent->d_name, COLOR_RESET);
-        }
-        else
-        {
-            printf("opened file %s%s%s for writing", COLOR_GREEN, dent->d_name, COLOR_RESET);
-            //do file writing here
-            //we need to create a tmp file
-            //to write the original file to
-
-            // fprintf(currentfile, "hello this is the program writing to you\n");
-            fclose(currentfile);
-            goto end; //TODO: remove this
-        }
+        char *fname = malloc(256 * sizeof(char));
+        sprintf(fname, "%s%c", dent->d_name, '\0');
+        // strcat(fname, "\0");
+        printf("fname: %s\n", fname);
+        // exit(-1);
+        maketmp(fname);
     }
 end:
-    free(dir);
     free(currentfile);
     free(fullpath);
     return closedir(dir);
@@ -127,11 +118,30 @@ char *appendfname(char *path, char *filename)
         exit(-1);
     }
     int len = strlen(DIR_NAME);
+    // printf("len of filename: %ld\n", strlen(filename));
+    // while (*filename != '\0')
+    // {
+    //     printf("non-null char: %c\n", *filename);
+    //     filename++;
+    // }
+    // printf("sEgFaUlT\n");
+    // exit(-1);
     int c;
     int i;
-    path[len] = '/';
-    for (i = 1; (c = *filename++) != '\0'; i++)
+    strcat(path, "/");
+    // strcpy(filename, "file1.txt");
+    filename[strlen(filename)] = '\0'; //I don't know why I need this but I do
+    for (i = 1; (c = *filename) != '\0'; i++)
     {
+        // printf("filename: %s\n", filename);
+        // exit(-1);
+        // printf("char: %c\n", c);
+        filename++;
+        // if (i > 13)
+        // {
+        //     printf("filename: %s\npath: %s\n", filename, path);
+        //     exit(-1);
+        // }
         // printf("appending %c at pos %d\n", c, len + i);
         path[len + i] = c;
     }
@@ -146,22 +156,22 @@ char *appendfname(char *path, char *filename)
 //the original file from tmp
 FILE *maketmp(char *filename)
 {
+    printf("filename: %s\nlen: %ld\n", filename, strlen(filename));
+    // exit(1);
     FILE *current;
     FILE *tmp;
 
-    //NOTE FOR FUTURE ME:
-    //THE SEGMENT STARTING HERE
     char *currentfname = calloc(MAX_PATH_LEN, sizeof(char));
     char *tmpfname = calloc(MAX_PATH_LEN + 5, sizeof(char));
 
     strcpy(currentfname, DIR_NAME);
     strcpy(tmpfname, DIR_NAME);
-    strcat(tmpfname, ".tmp");
 
+    printf("filename: %s\nlen: %ld\n", filename, strlen(filename));
+    // exit(1);
     currentfname = appendfname(currentfname, filename);
-    tmpfname = appendfname(tmpfname, tmpfname);
+    strcpy(tmpfname, currentfname);
     strcat(tmpfname, ".tmp\0");
-    //AND ENDING HERE IS NOT GOOD
 
     if (!(current = fopen(currentfname, "r")))
     {
@@ -184,10 +194,11 @@ FILE *maketmp(char *filename)
                 fputs(line, tmp);
             }
             //at this point (hopefully) the original file has been copied to the .tmp file
-            if (!fclose(current))
+            if (fclose(current))
             {
                 errclose
-                    exit(-1);
+                    printf("(file current)\n");
+                exit(-1);
             }
             else
             {
@@ -221,7 +232,7 @@ FILE *maketmp(char *filename)
                             TAB4, filename, TAB4, AUTHOR, TAB4, date, TAB4, SECTION, TAB4, EMAIL, TAB4, desc);
                     //at this point, the original file has the header but the rest is still in tmp
 
-                    if (!fclose(tmp))
+                    if (fclose(tmp))
                     {
                         errclose
                     }
@@ -239,7 +250,7 @@ FILE *maketmp(char *filename)
                             {
                                 fputs(line, current);
                             }
-                            if (!fclose(current))
+                            if (fclose(current))
                             {
                                 errclose
                             }
