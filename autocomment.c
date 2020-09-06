@@ -100,11 +100,18 @@ int main(int argc, char **argv)
         // exit(-1);
         maketmp(fname);
     }
-end:
-    free(currentfile);
-    free(fullpath);
-    return closedir(dir);
-    // return 0;
+    //TODO: delete .tmp files left in the directory
+    // printf("hello\n");
+    // free(currentfile);
+    // free(fullpath);
+    // printf("hello again\n");
+    // if (closedir(dir))
+    // {
+    //     printerr("couldn't close directory\n");
+    // }
+    printf("test\n");
+    exit(0); // I won't tell anyone if you don't ;)
+    return 0;
 }
 
 //appends filename to path
@@ -228,8 +235,9 @@ FILE *maketmp(char *filename)
                     char *desc = malloc(MAX_DESC * sizeof(char));
                     //note that I have to insert 4 TABS after every newline
                     readdesc(desc);
-                    fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%s\nDate:%s%s\nSection%s%s\nEmail:%s%s\nDescription:%s%s\"\"\"\n",
-                            TAB4, filename, TAB4, AUTHOR, TAB4, date, TAB4, SECTION, TAB4, EMAIL, TAB4, desc);
+                    fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%s\nDate:%s%s\nSection%s%s\nEmail:%s%s\nDescription:%s%s\"\"\"\n\n",
+                            TAB4, filename, TAB4, AUTHOR, TAB4, date, TAB4, SECTION, TAB4, EMAIL, "\t\t\t", desc);
+                    //I only need 3 tabs for desc but I'm not gonna define something else for just ^^^^^^
                     //at this point, the original file has the header but the rest is still in tmp
 
                     if (fclose(tmp))
