@@ -58,8 +58,6 @@ void readdesc(char *desc);
 int main(int argc, char **argv)
 {
     DIR *dir;
-    FILE *currentfile;
-    FILE *tmpfile;
 
     char *fullpath = calloc(MAX_PATH_LEN, sizeof(char));
     strcpy(fullpath, DIR_NAME);
