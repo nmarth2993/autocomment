@@ -25,7 +25,7 @@ Description:    This file automagically
 #define COLOR_RESET "\x1b[0m"
 
 //file-related constants
-#define DIR_NAME "test\0" //NOTE: This program should be one directory \
+#define DIR_NAME dirpath //NOTE: This program should be one directory \
                             above the one it is modifying (im lazy)
 #define MAX_PATH_LEN 512
 #define MAX_LINE 512
@@ -57,10 +57,24 @@ void readdesc(char *desc);
 //I now notice that it doesn't clean up on exit,
 //but it's 3am so that's a nope
 
+char *dirpath;
+
 int main(int argc, char **argv)
 {
+    //need a directory to search
+    if (argc < 2)
+    {
+        printerr("")
+            printf("no directory supplied\n");
+        return -1;
+    }
+
+    dirpath = calloc(256, sizeof(char));
+    strcpy(dirpath, *++argv); //copy second arg to use as global path var
+
     DIR *dir;
 
+    //try to open directory
     if ((dir = opendir(DIR_NAME)) == NULL)
     {
         printerr("could not open directory\n");
@@ -69,9 +83,13 @@ int main(int argc, char **argv)
     struct dirent *dent;
 
     int namelen;
+
+    //read the name of each file
     while ((dent = readdir(dir)) != NULL)
     {
         // printf("\n\nname[0]: %d, cmp: %d\n\n", dent->d_name[0], '.');
+
+        //ignore . and ..
         if (dent->d_name[0] == '.')
         {
             continue;
@@ -91,6 +109,8 @@ int main(int argc, char **argv)
         }
         // printf("name[0]: %c\nequals: %d\n", dent->d_name[0], dent->d_name[0] == '.');
         // printf("name: %s\n", dent->d_name);
+
+        //i don't know
         char *fname = malloc(256 * sizeof(char));
         sprintf(fname, "%s%c", dent->d_name, '\0');
         // strcat(fname, "\0");
