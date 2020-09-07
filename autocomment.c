@@ -401,9 +401,11 @@ FILE *maketmp(char *filename)
                     printf("enter description for file %s%s%s: ", COLOR_GREEN, filename, COLOR_RESET);
                     char *desc = malloc(MAX_DESC * sizeof(char));
 
-                    //print head of file before asking for desc
+                    //maybe print head of file before asking for desc?
+                    // char *head = malloc((MAX_PATH_LEN + 5) * sizeof(char)); //+5 chars for "head "
+                    // strcpy(head, "head ");
+                    // strcat(head, currentfname);
 
-                    // system();
                     readdesc(desc);
                     //author, section, and email (constants) have newlines in their strings,
                     //no need to include them in the format
