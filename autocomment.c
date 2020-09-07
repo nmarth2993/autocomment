@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 /*
 Sample header:
@@ -18,6 +19,12 @@ Description:    This file automagically
 """
 */
 
+#ifdef __linux__
+#define QUIT 0
+#else
+#define QUIT 1
+#endif
+
 //ANSI color constants
 #define COLOR_RED "\x1b[31m"
 #define COLOR_GREEN "\x1b[32m"
@@ -27,15 +34,17 @@ Description:    This file automagically
 //file-related constants
 #define DIR_NAME dirpath //NOTE: This program should be one directory \
                             above the one it is modifying (im lazy)
+#define CDIR_NAME "autocomment"
+#define DATAFILE "constants"
 #define MAX_PATH_LEN 512
 #define MAX_LINE 512
 #define MAX_DESC 512
 
 //header data constants
-#define AUTHOR "Nicholas Marthinuss"
-#define SECTION "13"
-#define EMAIL "nmarthi1@umbc.edu"
-#define TAB4 "\t\t\t\t"
+#define AUTHOR author
+#define SECTION section
+#define EMAIL email
+#define TAB3 "\t\t\t"
 
 #define printerr(message) printf("%serror: %s%s", COLOR_RED, COLOR_RESET, message);
 #define errclose printerr("could not close the file\n")
@@ -45,6 +54,7 @@ Description:    This file automagically
 char *appendfname(char *path, char *filename);
 FILE *maketmp(char *filename);
 void readdesc(char *desc);
+void readline(char *input);
 
 //uhhhh this program doesn't
 //recover very gracefully from IO errors
@@ -59,18 +69,128 @@ void readdesc(char *desc);
 
 char *dirpath;
 
+char *author;
+char *section;
+char *email;
+
 int main(int argc, char **argv)
 {
+    //quick OS check
+    if (QUIT)
+    {
+        printerr("this is a program only intened to be run on linux machines\n");
+        return -1;
+    }
+
     //need a directory to search
     if (argc < 2)
     {
         printerr("")
-            printf("no directory supplied\n");
+            printf("no directory supplied, try --help\n");
         return -1;
     }
 
+    if (!strcmp(*++argv, "--help"))
+    {
+        //print help and exit
+        printf("usage: autocomment [dir | --help]\n");
+        printf("\t--help: prints this help message\n");
+        printf("\t[dir]: name of directory that holds files to add descriptions\n");
+        printf("\nyou will be prompted for a description for each file\n");
+        printf("two empty lines in a row signal end of description entry\n");
+        printf("\nthe first time you run this program it will check for constants in %s~/autocomment/constants%s\n", COLOR_GREEN, COLOR_RESET);
+        printf("if it cannot find the file, it will ask you to enter each constant field and store it in the constants file\n");
+        printf("to be used on all subsequent invokations\n");
+        return 0;
+    }
+
+    author = malloc(MAX_LINE * sizeof(char));
+    section = malloc(MAX_LINE * sizeof(char));
+    email = malloc(MAX_LINE * sizeof(char));
+
+    char *home = getenv("HOME");
+    char *datafile = malloc(128 * sizeof(char));
+    char *datapath = malloc(128 * sizeof(char));
+
+    strcat(home, "/");
+
+    strcpy(datapath, home);
+    strcat(datapath, CDIR_NAME);
+    strcat(datapath, "/");
+
+    strcpy(datafile, datapath);
+    strcat(datafile, DATAFILE);
+
+    // printf("home: %s\nfile: %s\npath: %s\n", home, datafile, datapath);
+    // return 0;
+
+    FILE *constantsfile;
+    if ((constantsfile = fopen(datafile, "r")) == NULL)
+    {
+        mkdir(datapath, 0700); // 700 oct -> user has rwx
+        constantsfile = fopen(datafile, "w");
+        if ((constantsfile = fopen(datafile, "w")) == NULL)
+        {
+            printerr("could not create constants file\n");
+            return -1;
+        }
+        else
+        {
+            printf("No data file found. Creating one...\n");
+            //grab user input
+            setbuf(stdin, NULL);
+            char *input = malloc(MAX_LINE * sizeof(char));
+            printf("Enter your full name: ");
+            readline(input);
+            fprintf(constantsfile, "%s", input);
+            printf("\nEnter your section: ");
+            readline(input);
+            fprintf(constantsfile, "%s", input);
+            printf("\nEnter your email: ");
+            readline(input);
+            fprintf(constantsfile, "%s", input);
+            if (fclose(constantsfile))
+            {
+                errclose return -1;
+            }
+        }
+    }
+    //if we just closed the file for writing, open again to read
+    if (constantsfile == NULL)
+    {
+        if ((constantsfile = fopen(datafile, "r")) == NULL)
+        {
+            erropen return -1;
+        }
+    }
+    //read constants file
+    char *line = malloc(MAX_LINE * sizeof(char));
+
+    fgets(line, 512, constantsfile);
+    printf("line: %s\n", line);
+
+    printf("end of test section\n");
+    return 0;
+    if (!(author = fgets(line, MAX_LINE, constantsfile)))
+    {
+        printf("fileptr: %p\nline: %s\nauthor: %s\n", constantsfile, "not used", author);
+        printerr("1: malformed constants file\n");
+        return -1;
+    }
+    if (!(section = fgets(section, MAX_LINE, constantsfile)))
+    {
+        printerr("2: malformed constants file\n");
+        return -1;
+    }
+    if (!(email = fgets(email, MAX_LINE, constantsfile)))
+    {
+        printerr("3: malformed constants file\n");
+        return -1;
+    }
+    printf("author: %ssection: %semail: %s", author, section, email); //newline at end of strings
+
     dirpath = calloc(256, sizeof(char));
-    strcpy(dirpath, *++argv); //copy second arg to use as global path var
+    strcpy(dirpath, *argv); //copy second arg to use as global path var
 
     DIR *dir;
 
@@ -219,15 +339,13 @@ FILE *maketmp(char *filename)
 
     if (!(current = fopen(currentfname, "r")))
     {
-        printerr("could not read file\n");
-        goto cleanup;
+        erropen goto cleanup;
     }
     else
     {
         if (!(tmp = fopen(tmpfname, "w")))
         {
-            printerr("could not create tmpfile\n");
-            goto cleanup;
+            erropen goto cleanup;
         }
         else
         {
@@ -270,8 +388,7 @@ FILE *maketmp(char *filename)
                     //note that I have to insert 4 TABS after every newline
                     readdesc(desc);
                     fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%s\nDate:%s%s\nSection%s%s\nEmail:%s%s\nDescription:%s%s\"\"\"\n\n",
-                            TAB4, filename, TAB4, AUTHOR, TAB4, date, TAB4, SECTION, TAB4, EMAIL, "\t\t\t", desc);
-                    //I only need 3 tabs for desc but I'm not gonna define something else for just ^^^^^^
+                            TAB3, filename, TAB3, AUTHOR, TAB3, date, TAB3, SECTION, TAB3, EMAIL, TAB3, desc);
                     //at this point, the original file has the header but the rest is still in tmp
 
                     if (fclose(tmp))
@@ -355,4 +472,16 @@ void readdesc(char *desc)
     *desc = '\n';
     desc++;
     *desc = '\0';
+}
+
+void readline(char *input)
+{
+    int c;
+    int i = 0;
+    while ((c = getchar()) != EOF && c != '\n' && i++ - 2 < MAX_LINE)
+    {
+        *input++ = c;
+    }
+    *input++ = '\n';
+    *input = '\0';
 }
