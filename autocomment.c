@@ -45,6 +45,7 @@ Description:    This file automagically
 #define SECTION section
 #define EMAIL email
 #define TAB3 "\t\t\t"
+#define NUM_TABS 3
 
 #define printerr(message) printf("%serror: %s%s", COLOR_RED, COLOR_RESET, message);
 #define errclose printerr("could not close the file\n")
@@ -153,6 +154,7 @@ int main(int argc, char **argv)
             {
                 errclose return -1;
             }
+            constantsfile = NULL;
         }
     }
     //if we just closed the file for writing, open again to read
@@ -166,28 +168,41 @@ int main(int argc, char **argv)
     //read constants file
     char *line = malloc(MAX_LINE * sizeof(char));
 
-    fgets(line, 512, constantsfile);
-    printf("line: %s\n", line);
+    // line = fgets(line, MAX_LINE, constantsfile);
+    // printf("line: %s", line);
+    // if (!(author = fgets(author, MAX_LINE, constantsfile)))
+    // {
+    //     printerr("null\n");
+    //     return -1;
+    // }
+    // else
+    // {
+    //     printf("author: %s\nline: %s\n", author, line);
+    // }
 
-    printf("end of test section\n");
-    return 0;
-    if (!(author = fgets(line, MAX_LINE, constantsfile)))
+    // printf("line: %s", line);
+    // line = fgets(line, MAX_LINE, constantsfile);
+    // printf("line: %s", line);
+
+    // printf("end of test section\n");
+    // return 0;
+    if (!(author = fgets(author, MAX_LINE, constantsfile)))
     {
-        printf("fileptr: %p\nline: %s\nauthor: %s\n", constantsfile, "not used", author);
-        printerr("1: malformed constants file\n");
+        printerr("malformed constants file\n");
         return -1;
     }
     if (!(section = fgets(section, MAX_LINE, constantsfile)))
     {
-        printerr("2: malformed constants file\n");
+        printerr("malformed constants file\n");
         return -1;
     }
     if (!(email = fgets(email, MAX_LINE, constantsfile)))
     {
-        printerr("3: malformed constants file\n");
+
+        printerr("malformed constants file\n");
         return -1;
     }
-    printf("author: %ssection: %semail: %s", author, section, email); //newline at end of strings
+    // printf("author: %ssection: %semail: %s", author, section, email); //newline at end of strings
 
     dirpath = calloc(256, sizeof(char));
     strcpy(dirpath, *argv); //copy second arg to use as global path var
@@ -385,10 +400,15 @@ FILE *maketmp(char *filename)
 
                     printf("enter description for file %s%s%s: ", COLOR_GREEN, filename, COLOR_RESET);
                     char *desc = malloc(MAX_DESC * sizeof(char));
-                    //note that I have to insert 4 TABS after every newline
+
+                    //print head of file before asking for desc
+
+                    // system();
                     readdesc(desc);
-                    fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%s\nDate:%s%s\nSection%s%s\nEmail:%s%s\nDescription:%s%s\"\"\"\n\n",
-                            TAB3, filename, TAB3, AUTHOR, TAB3, date, TAB3, SECTION, TAB3, EMAIL, TAB3, desc);
+                    //author, section, and email (constants) have newlines in their strings,
+                    //no need to include them in the format
+                    fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%sDate:%s%s\nSection%s%sEmail:%s%sDescription:%s%s\"\"\"\n\n",
+                            TAB3, filename, TAB3, AUTHOR, TAB3, date, TAB3, SECTION, TAB3, EMAIL, "\t\t", desc);
                     //at this point, the original file has the header but the rest is still in tmp
 
                     if (fclose(tmp))
@@ -461,11 +481,9 @@ void readdesc(char *desc)
         if (c == '\n')
         {
             i += 16; //4 tabs * 4 spaces per tab
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < NUM_TABS; j++)
             {
-                *desc = '\t';
-                // printf("added tab\n");
-                desc++;
+                *desc++ = '\t';
             }
         }
     }
