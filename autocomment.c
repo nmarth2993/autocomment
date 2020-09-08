@@ -98,7 +98,7 @@ int main(int argc, char **argv)
         printf("\t--help: prints this help message\n");
         printf("\t[dir]: name of directory that holds files to add descriptions\n");
         printf("\nyou will be prompted for a description for each file\n");
-        printf("two empty lines in a row signal end of description entry\n");
+        printf("an empty line signals end of description entry\n");
         printf("\nthe first time you run this program it will check for constants in %s~/autocomment/constants%s\n", COLOR_GREEN, COLOR_RESET);
         printf("if it cannot find the file, it will ask you to enter each constant field and store it in the constants file\n");
         printf("to be used on all subsequent invokations\n");
