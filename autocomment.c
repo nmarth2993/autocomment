@@ -34,7 +34,7 @@ Description:    This file automagically
 //file-related constants
 #define DIR_NAME dirpath //NOTE: This program should be one directory \
                             above the one it is modifying (im lazy)
-#define CDIR_NAME "autocomment"
+#define CDIR_NAME ".autocomment"
 #define DATAFILE "constants"
 #define MAX_PATH_LEN 512
 #define MAX_LINE 512

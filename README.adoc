@@ -30,7 +30,7 @@ autocomment [dir | --help] +
 First usage
 ~~~~~~~~~~~
 
-When you invoke this program for the first time, it will look for the file __~/autocomment/constants__
+When you invoke this program for the first time, it will look for the file __~/.autocomment/constants__
 
 If the program does not find the file, it will prompt you to enter your name, section, and email.
 
