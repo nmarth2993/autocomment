@@ -45,3 +45,13 @@ Entering Descriptions
 For each file in the supplied directory, the program will prompt the user to enter a description for the file.
 
 An empty line signals the end of description input. The program then prompts for the next file until all files have a description.
+
+Compilation
+-----------
+
+Compiled with
+
+[source, bash]
+----
+gcc autocomment.c -o autocomment --std=c99
+----
