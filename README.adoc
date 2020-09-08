@@ -1,0 +1,47 @@
+autocomment
+===========
+
+Description
+-----------
+This program automatically creates header comments for my python homework files.
+The header files are in the format:
+
+[source,python]
+----
+"""
+File:         README.adoc
+Author:       Nicholas Marthinuss
+Date:         9/7/2020
+Section:      Lab section
+Email:        Email
+Description:  This file is a readme and describes
+              the functionality and usage of the program.
+"""
+----
+
+Usage
+-----
+
+autocomment [dir | --help] +
+    +
+    --help: prints the help message +
+    dir: name of directory to find the python source files
+
+First usage
+~~~~~~~~~~~
+
+When you invoke this program for the first time, it will look for the file __~/autocomment/constants__
+
+If the program does not find the file, it will prompt you to enter your name, section, and email.
+
+As long as the file remains, the program will use the information in that file to populate the header.
+
+If the file is deleted, it will prompt the user to input the required information again.
+
+
+Entering Descriptions
+~~~~~~~~~~~~~~~~~~~~~
+
+For each file in the supplied directory, the program will prompt the user to enter a description for the file.
+
+An empty line signals the end of description input. The program then prompts for the next file until all files have a description.
