@@ -42,16 +42,33 @@ If the file is deleted, it will prompt the user to input the required informatio
 Entering Descriptions
 ~~~~~~~~~~~~~~~~~~~~~
 
+With comment
+^^^^^^^^^^^^
+
+Descriptions may be provided by a comment on the first line of the program.
+
+To supply a description this way, a comment must follow the format:
+
+[source,python]
+----
+# @desc: Sample description
+----
+
+A description supplied through a comment will be automatically folded, every 30 characters by default.
+
+Without comment
+^^^^^^^^^^^^^^^
+
 For each file in the supplied directory, the program will prompt the user to enter a description for the file.
 
-An empty line signals the end of description input. The program then prompts for the next file until all files have a description.
+A blank line signals the end of description input. The program then prompts for the description of the next file for each file in the directory.
 
 Compilation
 -----------
 
 Compiled with
 
-[source, bash]
+[source,bash]
 ----
 gcc autocomment.c -o autocomment --std=c99
 ----

@@ -47,6 +47,8 @@ Description:    This file automagically
 #define TAB3 "\t\t\t"
 #define NUM_TABS 3
 
+#define LINE_FOLD 30
+
 #define printerr(message) printf("%serror: %s%s", COLOR_RED, COLOR_RESET, message);
 #define errclose printerr("could not close the file\n")
 #define erropen printerr("something went wrong opening the filen\n")
@@ -56,6 +58,8 @@ char *appendfname(char *path, char *filename);
 FILE *maketmp(char *filename);
 void readdesc(char *desc);
 void readline(char *input);
+int extractdesc(char *line, char *desc);
+void linefold(char *desc, char *folded);
 
 //uhhhh this program doesn't
 //recover very gracefully from IO errors
@@ -73,6 +77,9 @@ char *dirpath;
 char *author;
 char *section;
 char *email;
+char *desc;
+
+int descfound;
 
 int main(int argc, char **argv)
 {
@@ -97,17 +104,21 @@ int main(int argc, char **argv)
         printf("usage: autocomment [dir | --help]\n");
         printf("\t--help: prints this help message\n");
         printf("\t[dir]: name of directory that holds files to add descriptions\n");
-        printf("\nyou will be prompted for a description for each file\n");
+        printf("a description comment can be included as the first line with the format:\n");
+        printf("\t# @desc: This is the description\n");
+        printf("you will be prompted for a description for each file without such a comment\n");
         printf("an empty line signals end of description entry\n");
-        printf("\nthe first time you run this program it will check for constants in %s~/autocomment/constants%s\n", COLOR_GREEN, COLOR_RESET);
+        printf("\nthis program will check for constants in %s~/autocomment/constants%s\n", COLOR_GREEN, COLOR_RESET);
         printf("if it cannot find the file, it will ask you to enter each constant field and store it in the constants file\n");
-        printf("to be used on all subsequent invokations\n");
+        printf("to be used on all subsequent invocations\n");
         return 0;
     }
 
     author = malloc(MAX_LINE * sizeof(char));
     section = malloc(MAX_LINE * sizeof(char));
     email = malloc(MAX_LINE * sizeof(char));
+    desc = malloc(MAX_DESC * sizeof(char));
+    descfound = 0;
 
     char *home = getenv("HOME");
     char *datafile = malloc(128 * sizeof(char));
@@ -365,7 +376,28 @@ FILE *maketmp(char *filename)
         else
         {
             //finally we can do things
+
+            //first line may hold a description, save it to check
+            char *firstline = calloc(MAX_LINE, sizeof(char));
+            char *prefold = calloc(MAX_LINE, sizeof(char));
             char *line = calloc(MAX_LINE, sizeof(char));
+
+            //check if first line has description
+            fgets(firstline, MAX_LINE, current);
+            //if it does, save it, else call fputs
+
+            if (extractdesc(firstline, prefold) == 1)
+            {
+                //description found
+                descfound = 1;
+                linefold(prefold, desc);
+            }
+            else
+            {
+                descfound = 0;
+                fputs(firstline, tmp);
+            }
+
             while ((line = fgets(line, MAX_LINE, current)) != NULL)
             {
                 fputs(line, tmp);
@@ -398,15 +430,19 @@ FILE *maketmp(char *filename)
                     //format date output to *date
                     sprintf(date, "%d/%d/%d%c", time.tm_mon + 1, time.tm_mday, time.tm_year + 1900, '\0');
 
-                    printf("enter description for file %s%s%s: ", COLOR_GREEN, filename, COLOR_RESET);
-                    char *desc = malloc(MAX_DESC * sizeof(char));
-
                     //maybe print head of file before asking for desc?
                     // char *head = malloc((MAX_PATH_LEN + 5) * sizeof(char)); //+5 chars for "head "
                     // strcpy(head, "head ");
                     // strcat(head, currentfname);
 
-                    readdesc(desc);
+                    //if no desc found, enter one
+                    if (!descfound)
+                    {
+                        // desc = malloc(MAX_DESC * sizeof(char));
+                        printf("no description comment found.\n");
+                        printf("enter description for file %s%s%s: ", COLOR_GREEN, filename, COLOR_RESET);
+                        readdesc(desc);
+                    }
                     //author, section, and email (constants) have newlines in their strings,
                     //no need to include them in the format
                     fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%sDate:%s%s\nSection%s%sEmail:%s%sDescription:%s%s\"\"\"\n\n",
@@ -504,4 +540,88 @@ void readline(char *input)
     }
     *input++ = '\n';
     *input = '\0';
+}
+
+//checks line for description comment
+//stores description in desc
+//returns 1 if description found, else 0
+int extractdesc(char *line, char *desc)
+{
+    //ignore whitespace until # maybe?
+    //sample lines:
+    //# @desc: This is a desc
+    //#@desc: This is a desc
+
+    //skip leading whitespace
+    while (*line == '\t' || *line == ' ')
+    {
+        line++;
+    }
+
+    // printf("line[0]: %c\n", *line);
+    if (*line != '#')
+    {
+        return 0;
+    }
+    //move pointer up one since we have
+    //already read the '#'
+    line++;
+
+    while (*line == ' ')
+    {
+        line++;
+    }
+
+    //if comment line does not have desc tag
+    if (strncmp(line, "@desc:", 6))
+    {
+        return 0;
+    }
+    line += 6; //move past next 6 chars (skip annotation)
+    while (*line == ' ')
+    {
+        line++;
+    }
+
+    int i = 0;
+    while (*line != '\n' && i < MAX_LINE - 1)
+    {
+        i++;
+        *desc = *line;
+        desc++;
+        line++;
+    }
+    *desc = '\0';
+    return 1;
+}
+
+//adds newlines when space is read
+//and n > LINE_FOLD
+//even folding perhaps???
+void linefold(char *desc, char *folded)
+{
+    int n = 1;
+    while (*desc != '\n' && *desc != '\0' && n < MAX_DESC)
+    {
+        if (*desc == ' ' && n > LINE_FOLD)
+        {
+            *folded = '\n';
+            for (int i = 0; i < 3; i++)
+            {
+                folded++;
+                *folded = '\t';
+            }
+            n = 1;
+        }
+        else
+        {
+            *folded = *desc;
+        }
+        n++;
+        folded++;
+        desc++;
+    }
+    *folded = '\n';
+    folded++;
+    *folded = '\0';
 }
