@@ -11,8 +11,8 @@ Sample header:
 File:           autocomment.c
 Author:         Nicholas Marthinuss
 Date:           9/6/2020
-Section:        13
-E-mail:         nmarthi1@umbc.edu
+Section:        Section
+E-mail:         Email
 Description:    This file automagically
                 adds python header comments
                 to my CS homework files.
