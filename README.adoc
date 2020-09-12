@@ -59,7 +59,9 @@ A description supplied through a comment will be automatically folded, every 30 
 Without comment
 ^^^^^^^^^^^^^^^
 
-For each file in the supplied directory, the program will prompt the user to enter a description for the file.
+For each file in the supplied directory without a description comment, the program will prompt the user to enter a description for the file.
+
+In description entry mode, the user must choose where to put line breaks. Pressing enter will insert a newline in the description.
 
 A blank line signals the end of description input. The program then prompts for the description of the next file for each file in the directory.
 
@@ -70,5 +72,5 @@ Compiled with
 
 [source,bash]
 ----
-gcc autocomment.c -o autocomment --std=c99
+gcc autocomment.c -o autocomment
 ----
