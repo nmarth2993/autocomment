@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     //quick OS check
     if (QUIT)
     {
-        printerr("this is a program only intened to be run on linux machines\n");
+        printerr("this is a program only intended to be run on linux machines\n");
         return -1;
     }
 
