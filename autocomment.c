@@ -445,7 +445,7 @@ FILE *maketmp(char *filename)
                     }
                     //author, section, and email (constants) have newlines in their strings,
                     //no need to include them in the format
-                    fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%sDate:%s%s\nSection%s%sEmail:%s%sDescription:%s%s\"\"\"\n\n",
+                    fprintf(current, "\"\"\"\nFile:%s%s\nAuthor:%s%sDate:%s%s\nSection:%s%sEmail:%s%sDescription:%s%s\"\"\"\n\n",
                             TAB3, filename, TAB3, AUTHOR, TAB3, date, TAB3, SECTION, TAB3, EMAIL, "\t\t", desc);
                     //at this point, the original file has the header but the rest is still in tmp
 
