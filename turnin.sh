@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # example format:
-# turning cmsc201 HW3
+# turnin cmsc201 HW3
+
+if [[ $1 == "--help" || $1 == "-h" ]]
+then
+	echo "usage: turnin [-h] <classname> <assignment>"
+	exit
+fi
 
 if [ -z $1 ]
 then
@@ -14,6 +20,8 @@ then
 	echo error: no assignment specified
 	exit
 fi
+
+
 
 ~/.autocomment/autocomment $(pwd)
 
