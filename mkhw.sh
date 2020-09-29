@@ -13,13 +13,13 @@ then
 	exit
 fi
 
-if [[ "$1" =~ [A-Z] ]]
+if [[ "$1" =~ ^[0-9]+$ ]]
 then
-	echo hw names should be in lowercase
+	echo "you only need a single number"
 	exit
 fi
 
-prefix="$1_part"
+prefix="hw$1_part"
 
 for i in {1..5}
 do
