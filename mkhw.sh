@@ -26,9 +26,9 @@ do
 	file="$prefix$i.py"
 	if [ -f $file ]
 	then
-		echo "skipping existing file $file"
+		echo "skipping existing file $file..."
 	else
-		echo "creating file $file"
+		echo "creating file $file..."
 		touch $file
 	fi
 done
