@@ -13,7 +13,7 @@ then
 	exit
 fi
 
-if [[ "$1" =~ ^[0-9]+$ ]]
+if [[ ! "$1" =~ ^[0-9]+$ ]]
 then
 	echo "you only need a single number"
 	exit
