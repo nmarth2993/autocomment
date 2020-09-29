@@ -74,3 +74,49 @@ Compiled with
 ----
 gcc autocomment.c -o autocomment
 ----
+
+Shell Scripts
+=============
+
+mkhw
+----
+
+mkhw is a simple script that creates the 5 required homework files in the format
+
+[source]
+----
+hw$_part*.py
+----
+
+where $ is the assignment number and * is the part number
+
+Usage
+~~~~~
+
+to use mkhw, you only need to provide the homework number
+
+[source, bash]
+----
+mkhw 3
+----
+
+will create the files hw3_part*.py
+
+turnin
+------
+
+turnin simply runs autocomment on all of the files in the current directory and then submits them to the given class and assignment
+
+Usage
+~~~~~
+
+turnin expects a class name and an assignment name
+
+to turn in all files in the current directory to cmsc201's HW4 assignment:
+[source, bash]
+----
+turnin cmsc201 HW4
+----
+
+[NOTE]
+turnin is generally the command to use when you are ready to submit, as it comments the files and turns them in. if you use autocomment before using turnin, it will cause a redundant header comment
